@@ -1,5 +1,7 @@
 package enums;
 
+import java.util.Arrays;
+
 import exceptions.WrongParam;
 
 public enum Difficulty {
@@ -17,11 +19,9 @@ public enum Difficulty {
         return num;
     }
     public static Difficulty getVal(int num) throws WrongParam{
-        for (Difficulty dif : values()) {
-            if (dif.getNum() == num) {
-                return dif;
-            }
-        }
-        throw new WrongParam("Некорректное значение: ");
+        return Arrays.stream(values())
+            .filter(dif -> dif.getNum() == num)
+            .findFirst()
+            .orElseThrow(() -> new WrongParam("Некорректное значение: "));
     }
 }

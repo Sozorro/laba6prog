@@ -1,5 +1,7 @@
 package enums;
 
+import java.util.Arrays;
+
 import exceptions.WrongParam;
 
 public enum Color {
@@ -18,11 +20,9 @@ public enum Color {
         return num;
     }
     public static Color getVal(int num) throws WrongParam{
-        for (Color col : values()) {
-            if (col.getNum() == num) {
-                return col;
-            }
-        }
-        throw new WrongParam("Некорректное значение: ");
+        return Arrays.stream(values())
+            .filter(col -> col.getNum() == num)
+            .findFirst()
+            .orElseThrow(() -> new WrongParam("Некорректное значение: "));
     }
 }

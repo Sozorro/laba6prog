@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import builders.LabWork;
 import builders.Person;
@@ -62,36 +63,24 @@ public class CollectionManager {
         System.out.println("Объект с id " + id + " обновлён");
     }
 
-
+    //Изменен с использованием Stream API
     public LabWork findElem(long id) {
-        Iterator<LabWork> iterator = labwork.iterator();
-        while(iterator.hasNext()) {
-            LabWork laba = iterator.next();
-            if(laba.getId() == id)             
-                return laba;
-        }
-        return null;
+        return labwork.stream()
+            .filter(laba -> laba.getId() == id)
+            .findFirst()
+            .orElse(null);
     }
+    //Изменен с использованием Stream API
     public ArrayList<LabWork> findElemsHeavierPerson(Person author) {
-        ArrayList<LabWork> labs = new ArrayList<LabWork>();
-        Iterator<LabWork> iterator = labwork.iterator();
-        while(iterator.hasNext()) {
-            LabWork laba = iterator.next();
-            if(laba.getAuthor().getWeight() > author.getWeight())             
-                labs.add(laba);
-        }
-        return labs;
+        return labwork.stream()
+            .filter(laba -> laba.getAuthor().getWeight() > author.getWeight())
+            .collect(Collectors.toCollection(ArrayList::new));
     }
+    //Изменен с использованием Stream API
     public ArrayList<LabWork> findElemsSubstring(String prefDescription) {
-        ArrayList<LabWork> labs = new ArrayList<LabWork>();
-        Iterator<LabWork> iterator = labwork.iterator();
-        while(iterator.hasNext()) {
-            LabWork laba = iterator.next();
-            if(laba.getDescription().startsWith(prefDescription)){
-                labs.add(laba);
-            }          
-        }
-        return labs;
+        return labwork.stream()
+            .filter(laba -> laba.getDescription().startsWith(prefDescription))
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public TreeSet<LabWork> getElems() {
