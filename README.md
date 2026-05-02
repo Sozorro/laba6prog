@@ -4,7 +4,7 @@
 
 Вариант работы: 87531
 ## Компиляция и запуск
-javac -d dirclass \*\*/\*\*.java; java -cp dirclass Main
+javac -d dirclass \*\*/\*.java ; java -cp dirclass server.src.Main
 
 ## Требования
 
