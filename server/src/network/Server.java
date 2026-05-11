@@ -1,9 +1,8 @@
 package server.src.network;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
-import java.io.ObjectInputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -15,8 +14,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import client.src.network.Request;
+import api.Request;
 import server.src.managers.CollectionManager;
+import server.src.managers.ComParser;
 
 public class Server {
     private String host;
@@ -27,21 +27,41 @@ public class Server {
     private CollectionManager collectionManager;
     private Selector selector;
     private Map<SocketChannel, ByteArrayOutputStream> arrByteMapForClients = new HashMap<>(); //Данные для каждого клиента
+    private boolean isPaused = false; 
+    private Thread serverThread;
 
     public Server(String host, int port) {
         this.host = host;
         this.port = port;
     }
 
+    public void start() {
+        if (work) {
+            System.out.println("Сервер уже запущен");
+            return;
+        }
+        work = true;
+        serverThread = new Thread(() -> run());
+        serverThread.start();
+    }
+    public void stop() {
+        work = false;
+        try {
+            closeServer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     public void openServer(){
         try {
             serverSocketChannel = ServerSocketChannel.open();
-            work = true;
             serverSocketChannel.bind(new InetSocketAddress(host, port));
             serverSocketChannel.configureBlocking(false);
             selector = Selector.open();
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             System.out.println("Сервер запущен");
+            collectionManager = new CollectionManager();
         } catch (Exception e) {
             System.out.println("Ошибка при попытке создать сервер");
         }
@@ -63,7 +83,7 @@ public class Server {
             Thread dotsThread = new Thread(() -> {
                 while (!Thread.currentThread().isInterrupted()) {
                     if (wait) {
-                        System.out.println("...");
+                        System.out.println("Ожидаем подключения хотя бы одного клиента ...");
                     }
                     try {
                         Thread.sleep(5000);
@@ -73,9 +93,9 @@ public class Server {
                 }
             });
             dotsThread.start();
-            System.out.println("Ожидаем подключения хотя бы одного клиента ...");
+            //System.out.println("Ожидаем подключения хотя бы одного клиента ...");
             while (work) {
-                if (selector.keys().size() == 1) wait = true;
+                if (arrByteMapForClients.size() == 0) wait = true;
                 else wait = false;
                 selector.select();
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -88,7 +108,7 @@ public class Server {
                         SocketChannel clientChannel = serverSocketChannel.accept();
                         //System.out.println("Подключился клиент: " + clientChannel + "\n" + "К серверу: " + key.channel());
                         clientChannel.configureBlocking(false);
-                        clientChannel.register(selector, SelectionKey.OP_READ);
+                        clientChannel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE);
                         arrByteMapForClients.put(clientChannel, new ByteArrayOutputStream());
                         System.out.println("Клиент " + clientChannel.getRemoteAddress() + " подключен");
                     } else if (key.isReadable()) {
@@ -99,6 +119,9 @@ public class Server {
                         } catch (EOFException e) {
                             if (key != null) {
                                 key.cancel();
+                                clientChannel.close();
+                                arrByteMapForClients.remove(clientChannel);
+                                System.out.println("Клиент отключился");
                             }
                         }
                         
@@ -109,7 +132,7 @@ public class Server {
             e.printStackTrace();
             System.out.println("Ошибка при попытке подключить клиента");
         } finally {
-            closeServer();
+            if(!work) stop();
         }
     }
 
@@ -121,7 +144,7 @@ public class Server {
                 if (c == -1) {
                     clientChannel.close();
                     arrByteMapForClients.remove(clientChannel);
-                    System.out.println("Клиент отключился");
+                    //System.out.println("Клиент отключился");
                     throw new EOFException("Канал закрыт");
                 } else if (c == 0) {
                     // Нет данных, ждём следующего события
@@ -147,7 +170,7 @@ public class Server {
                 if (c == -1) {
                     clientChannel.close();
                     arrByteMapForClients.remove(clientChannel);
-                    System.out.println("Клиент отключился");
+                    //System.out.println("Клиент отключился");
                     throw new EOFException("Канал закрыт");
                 }
             }
@@ -160,7 +183,7 @@ public class Server {
             Request req = Serialize.tryDeserialize(bytes);
             
             if (req == null) {
-                continue;
+                return;
             }
             if (req != null) {
                 System.out.println("Получен объект: " + req);
@@ -173,16 +196,39 @@ public class Server {
                 work = false;
                 return;
             }
+
+            buf.clear();
+
+            ComParser comParser = new ComParser(collectionManager);
+            String res;
             if(req.getArgs() != null) {
-                comParser.interpret(req.getCommand(), req.getArgs());
+                res = comParser.interpret(req.getCommand().getName(), req.getArgs());
             } else if(req.getLabWork() != null) {
-                comParser.interpret(req.getCommand(), req.getLabWork());
+                res = comParser.interpret(req.getCommand().getName(), req.getLabWork());
             } else {
-                comParser.interpret(req.getCommand());
+                res = comParser.interpret(req.getCommand().getName(), null);
             }
+            answerServer(clientChannel, res);
+
+        } catch (EOFException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Ошибка при попытке получить запрос");
+        }
+    }
+    public void answerServer(SocketChannel clientChannel, String res) {
+        try {
+            byte[] serializedObject = Serialize.serializeObject(res);
+            ByteBuffer buffer = ByteBuffer.allocate(4 + serializedObject.length);
+            buffer.putInt(serializedObject.length);
+            buffer.put(serializedObject);
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                clientChannel.write(buffer);
+            }
+        } catch (Exception e) {
+            System.out.println("[p");
         }
     }
 }

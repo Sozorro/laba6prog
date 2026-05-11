@@ -1,8 +1,9 @@
 package client.src.manegers;
 
-import client.src.builders.Person;
-import client.src.enums.Color;
-import client.src.enums.Difficulty;
+import api.builders.Coordinates;
+import api.entites.Person;
+import api.entites.enums.Color;
+import api.entites.enums.Difficulty;
 
 public class Validator {
     public static boolean validDateForLabWork(java.util.Date date) {

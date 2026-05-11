@@ -2,4 +2,4 @@ dirclass
 *.class
 .vscode
 chern
-.DS_Store
+**/.DS_Store

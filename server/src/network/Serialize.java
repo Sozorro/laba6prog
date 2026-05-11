@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import client.src.network.Request;
+import api.Request;
 
 public class Serialize {
     public static Request tryDeserialize(byte[] bytes) throws Exception {

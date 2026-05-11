@@ -2,8 +2,22 @@ package client.src.manegers;
 
 import java.util.HashMap;
 
-import client.src.com.*;
-import client.src.network.Request;
+import api.Request;
+import api.entites.LabWork;
+import api.exceptions.WrongParam;
+import client.src.comClient.AddCom;
+import client.src.comClient.ClearCom;
+import client.src.comClient.Command;
+import client.src.comClient.CountGreaterThanAuthorCom;
+import client.src.comClient.ExecuteScriptCom;
+import client.src.comClient.ExitCom;
+import client.src.comClient.FilterStartsWithDescriptionCom;
+import client.src.comClient.HelpCom;
+import client.src.comClient.HistoryCom;
+import client.src.comClient.InfoCom;
+import client.src.comClient.RemoveByIdCom;
+import client.src.comClient.ShowCom;
+import client.src.comClient.StopCom;
 
 public class ComParser {
     private HashMap<String, Command> commands = new HashMap<>();
@@ -29,9 +43,13 @@ public class ComParser {
     }
 
     public Request interpret(String name, String... args) {
+        System.out.println(name);
         Command command = this.commands.get(name);
-        Request req = new Request(command, command.execute(args));
-        return req;
+        Object res = command.execute(args);
+        if(res == null) return new Request(command);
+        if(res instanceof LabWork) return new Request(command, (LabWork) command.execute(args));
+        if(res instanceof String) return new Request(command, (String) command.execute(args));
+        else throw new WrongParam();
     }
     
 }

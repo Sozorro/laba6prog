@@ -3,9 +3,9 @@ package client.src.io;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import client.src.exceptions.WrongParam;
+import api.Request;
+import api.exceptions.WrongParam;
 import client.src.manegers.ComParser;
-import client.src.network.Request;
 
 public class Input {
     private static ComParser comParser;
@@ -22,7 +22,6 @@ public class Input {
                 String[] command = s.split(" ", 2);
                 if(!comParser.getCommands().containsKey(command[0])) {
                     System.out.println("Неверная команда");
-                    System.out.println("Ведите команду. Если хотите выйти введите: 'exit'. Для справки введите: help");
                     continue;
                 }
                 if(command.length == 1) {

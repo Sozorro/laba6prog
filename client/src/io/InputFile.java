@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
 
-import client.src.exceptions.WrongParam;
+import api.exceptions.WrongParam;
 import client.src.manegers.ComParser;
 
 public class InputFile {

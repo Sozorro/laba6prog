@@ -1,11 +1,14 @@
 package client.src.network;
 
+import java.io.ByteArrayOutputStream;
+import java.io.EOFException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
+import api.Request;
 import client.src.io.Input;
 
 public class Client {
@@ -56,6 +59,14 @@ public class Client {
         try(Scanner scanner = new Scanner(System.in)) {
             while (true) {
                 Request req = Input.start(scanner);
+                if (req.getCommand() != null) {
+                    System.out.println("##################");
+                    System.out.println("Передаём данные:");
+                    System.out.println(req.getCommand().toString());
+                    if(req.getLabWork() != null) System.out.println(req.getLabWork().toString());
+                    if(req.getArgs() != null) System.out.println(req.getArgs().toString());
+                    System.out.println("##################");
+                }
                 if (req.getCommand().toString().equals("command 'help'")) {
                    continue;
                 }
@@ -71,14 +82,64 @@ public class Client {
                 if (req.getCommand().toString().equals("command 'exit'") || req.getCommand().toString().equals("command 'stop'")) {
                    break;
                 }
+                buffer.clear();
+                answerServer();
 
                 /*Object response = in.readObject();
                 System.out.println("Ответ сервера: " + response);*/
             }
 
         } catch (Exception e) {
+            e.printStackTrace();
             System.out.println("Ошибка при попытке передать запрос");
         }
+    }
+    public void answerServer() {
+        try {
+            ByteBuffer lengthBuffer = ByteBuffer.allocate(4);
+            while (lengthBuffer.hasRemaining()) {
+                int c = socketChannel.read(lengthBuffer);
+                if (c == -1) {
+                    System.out.println("не работает:(");
+                    return;
+                } else if (c == 0) {
+                    // Нет данных, ждём следующего события
+                    System.out.println("Нет данных, ждём следующего события");
+                    return;
+                }   
+            }
+            lengthBuffer.flip();
+            int size = lengthBuffer.getInt();
+
+            if(size <= 0) {
+                System.out.println("Неверный размер");
+                return;
+            }
+
+            ByteBuffer buf = ByteBuffer.allocate(size);
+            ByteArrayOutputStream arrByte = new ByteArrayOutputStream();
+            while (buf.hasRemaining()) {
+                int c = socketChannel.read(buf);
+                if (c == -1) {
+                    System.out.println("не работает?:(");
+                    return;
+                }
+            }
+            buf.flip();
+            byte[] bytes = new byte[buf.remaining()];
+            buf.get(bytes);
+            String req = Serialize.tryDeserialize(bytes);
+            if (req == null) {
+                return;
+            }
+            if (req != null) {
+                System.out.println("Получен объект: " + req);
+            } 
+        } catch (Exception e) {
+            // TODO: handle exception
+        }
+        
+
     }
 }
 /*ByteBuffer lengthBuffer = ByteBuffer.allocate(4);

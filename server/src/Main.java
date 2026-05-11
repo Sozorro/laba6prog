@@ -3,7 +3,7 @@ package server.src;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import client.src.exceptions.WrongParam;
+import api.exceptions.WrongParam;
 import server.src.network.Server;
 
 public class Main {
@@ -18,7 +18,7 @@ public class Main {
                 if (s == null) continue;
                 if (s.equals("start")) {
                     Server server = new Server("localhost", 1234);
-                    server.run();
+                    server.start();
                     break;
                     //System.exit(0);
                 }
