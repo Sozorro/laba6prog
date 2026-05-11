@@ -5,11 +5,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import client.src.network.Request;
+
 public class Serialize {
-    public static Object tryDeserialize(byte[] bytes) throws Exception {
+    public static Request tryDeserialize(byte[] bytes) throws Exception {
         try {
             ObjectInputStream obj = new ObjectInputStream(new ByteArrayInputStream(bytes));
-            return obj.readObject();
+            return (Request) obj.readObject();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Ошибка при десериализации");

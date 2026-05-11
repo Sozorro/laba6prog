@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import client.src.network.Request;
 import server.src.managers.CollectionManager;
 
 public class Server {
@@ -156,43 +157,29 @@ public class Server {
             buf.get(bytes);
             //buf.clear();
             //arrByte.write(bytes);
-            Object obj = Serialize.tryDeserialize(bytes);
+            Request req = Serialize.tryDeserialize(bytes);
             
-            if (obj != null) {
-                System.out.println("Получен объект: " + obj);
+            if (req == null) {
+                continue;
             }
-            if (obj instanceof String) {
-                String message = (String) obj;
-                if (message.equals("exit")) {
-                    work = false;
-                    return;
-                } else if (message.equals("discon")) {
-                    clientChannel.close();
-                    throw new EOFException("Канал закрыт");
-                } else {
-                    //Answer
-                    ByteBuffer outBuffer = ByteBuffer.wrap(Serialize.serializeObject("Длина строки: " + message.length()));
-                    clientChannel.write(outBuffer);
-                }
+            if (req != null) {
+                System.out.println("Получен объект: " + req);
+            } 
+            if (req.getCommand().toString().equals("command 'exit'")) {
+                clientChannel.close();
+                throw new EOFException("Канал закрыт");
             }
-            /*    //Очистка
-                arrByte.reset();
+            if (req.getCommand().toString().equals("command 'stop'")) {
+                work = false;
+                return;
             }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(obj);
-        }
-        byte[] dataToSend = baos.toByteArray();
-
-        // Отправка данных
-        ByteBuffer buffer = ByteBuffer.allocate(4 + dataToSend.length);
-        buffer.putInt(dataToSend.length); // длина объекта
-        buffer.put(dataToSend);
-        buffer.flip();
-
-        while (buffer.hasRemaining()) {
-            channel.write(buffer);
-        }*/
+            if(req.getArgs() != null) {
+                comParser.interpret(req.getCommand(), req.getArgs());
+            } else if(req.getLabWork() != null) {
+                comParser.interpret(req.getCommand(), req.getLabWork());
+            } else {
+                comParser.interpret(req.getCommand());
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Ошибка при попытке получить запрос");

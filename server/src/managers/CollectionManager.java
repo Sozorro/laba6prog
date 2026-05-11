@@ -6,9 +6,9 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import client.src.builders.LabWork;
+import client.src.builders.Person;
 import client.src.exceptions.WrongParam;
-import server.src.builders.LabWork;
-import server.src.builders.Person;
 
 public class CollectionManager {
     private TreeSet<LabWork> labwork = new TreeSet<>(new idComparator());
