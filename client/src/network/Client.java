@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
@@ -11,6 +13,7 @@ public class Client {
     //private String host;
     //private int port;
     private SocketChannel socketChannel;
+    private Selector selector;
 
     public Client() { //String host, int port) {
         //this.host = host;
@@ -20,6 +23,7 @@ public class Client {
     public void createClient(){
         try {
             socketChannel = SocketChannel.open();
+            //socketChannel.configureBlocking(false);
             System.out.println("Клиент создан");
         } catch (Exception e) {
             System.out.println("Ошибка при попытке создать клиента");
@@ -51,21 +55,26 @@ public class Client {
 
     public void request() {
         try(
-            ObjectOutputStream out = new ObjectOutputStream(socketChannel.socket().getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socketChannel.socket().getInputStream());
             Scanner scanner = new Scanner(System.in);
         ) {
             String line;
             System.out.println("Введите сообщение для отправки (или 'exit' для выхода или 'discon' для отключения от сервера):");
-            while (true) { //!(line = scanner.nextLine()).equalsIgnoreCase("exit")
+            while (true) {
                 line = scanner.nextLine();
-                out.writeObject(line);
-                out.flush();
-                Object response = in.readObject();
-                System.out.println("Ответ сервера: " + response);
-                if (line != null && (line.toString().equals("discon") ||  line.toString().equals("exit"))) {
+                byte[] serializedObject = Serialize.serializeObject(line);
+                ByteBuffer buffer = ByteBuffer.allocate(4 + serializedObject.length);
+                buffer.putInt(serializedObject.length);
+                buffer.put(serializedObject);
+                buffer.flip();
+                while (buffer.hasRemaining()) {
+                    socketChannel.write(buffer);
+                }
+                if(line != null && (line.toString().equals("discon") ||  line.toString().equals("exit"))) {
                     break;
                 }
+
+                /*Object response = in.readObject();
+                System.out.println("Ответ сервера: " + response);*/
             }
 
         } catch (Exception e) {
@@ -73,91 +82,54 @@ public class Client {
         }
     }
 }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    /*private int port;
-    private String host;
-    private SocketChannel socket;
+/*ByteBuffer lengthBuffer = ByteBuffer.allocate(4);
+while (lengthBuffer.hasRemaining()) {
+    int c = clientChannel.read(lengthBuffer);
+    if (c == -1) {
+        clientChannel.close();
+        arrByteMapForClients.remove(clientChannel);
+        System.out.println("Клиент отключился");
+        return;
+    } else if (c == 0) {
+        // Нет данных, ждём следующего события
+        System.out.println("Нет данных, ждём следующего события");
+        return;
+    }   
+}
+lengthBuffer.flip();
+int size = lengthBuffer.getInt();
+System.out.println("][" + size);
+//lengthBuffer.clear();
 
-    public Client(String host, int port) {
-        this.host = host;
-        this.port = port;
+if(size <= 0) {
+    System.out.println("Неверный размер");
+    return;
+}
+
+ByteBuffer buf = ByteBuffer.allocate(size);
+ByteArrayOutputStream arrByte = arrByteMapForClients.get(clientChannel);
+
+while (buf.hasRemaining()) {
+    int c = clientChannel.read(buf);
+    if (c == -1) {
+        clientChannel.close();
+        arrByteMapForClients.remove(clientChannel);
+        System.out.println("Клиент отключился");
+        return;
     }
+}
 
-    public void open() {
-        try {
-            socket = SocketChannel.open();
-            socket.connect(new InetSocketAddress(host, port));
-            System.out.println("Клиент пришёл");
-        } catch (IOException e) {
-            System.out.println("Ошибка при попытке создать сервер");
-        }
+buf.flip();
+byte[] bytes = new byte[buf.remaining()];
+buf.get(bytes);
+//buf.clear();
+//arrByte.write(bytes);
+Object obj = Serialize.tryDeserialize(bytes);
 
-    }
-    public void close() {
-        try {
-            socket.close();
-            System.out.println("Клиент ушёл:(");
-        } catch (IOException e) {
-            System.out.println("Ошибка при попытке закрыть сервер");
-        }
-
-    }*/
-    /*public void run(String path) {
-        try {
-            openServer();
-            while (true) {
-                SocketChannel clientSocket = serverSocket.accept(); //ждём, пока кто-то подключится
-                System.out.println("Клиент подключен: " + clientSocket.getRemoteAddress());
-                clientRequest(clientSocket);
-            }
-        } catch (IOException e) {
-            System.out.println("Ошибка");
-        } finally {
-            closeServer();
-        }
-        
-    }*/
-    /*public void request() {
-        open();
-        ObjectOutputStream out;
-        ObjectInputStream in;
-        try {
-            out = new ObjectOutputStream(socket.socket().getOutputStream());
-            in = new ObjectInputStream(socket.socket().getInputStream());
-            out.writeObject("запрос");
-            out.flush();
-            System.out.println(in.readObject().toString());
-        } catch (IOException | ClassNotFoundException e) {
-            System.out.println("Ошибка");
-        } finally {
-            //out.close();
-            //in.close();
-        }
-
-    }
-}*/
+if (obj != null) {
+    System.out.println("Получен объект: " + obj);
+}
+ */
 
 /*
  * Клиентский модуль должен в интерактивном режиме считывать
