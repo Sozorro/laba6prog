@@ -1,23 +1,21 @@
 package client.src.com;
 
+import client.src.builders.Person;
+import client.src.builders.PersonBuilder;
+import client.src.enums.Color;
 import client.src.exceptions.WrongAction;
 import client.src.exceptions.WrongParam;
 import client.src.io.Input;
 import client.src.io.InputFile;
-import server.src.builders.Person;
-import server.src.builders.PersonBuilder;
-import server.src.enums.Color;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComHistory;
+import client.src.manegers.ComHistory;
 
 public class CountGreaterThanAuthorCom extends Command {
-    public CountGreaterThanAuthorCom(CollectionManager collectionManager) {
-        super(collectionManager);
+    public CountGreaterThanAuthorCom() {
         this.name = "counterByWeight";
         this.description = "Вывести кол-во элементов, вес которых в поле \"author\"  больше заданного";
     }
     @Override
-    public void execute(String... args) {
+    public String execute(String... args) {
         try {
             String[] str;
             if(args == null || args.length == 0) {
@@ -30,7 +28,7 @@ public class CountGreaterThanAuthorCom extends Command {
                     }
                     if(prov.equals("yes") || prov.equals("y")) {
                         str = Input.getParams("введите вес").split(" ");
-                    }//
+                    }
                     System.out.println("Комнда была пропущена");
                     throw new WrongAction();
                 }
@@ -43,15 +41,17 @@ public class CountGreaterThanAuthorCom extends Command {
             PersonBuilder personBuilder = new PersonBuilder();
             Person author = personBuilder.makePerson("", 0.0, Long.valueOf(str[0]), "", Color.WHITE);
             ComHistory.addCom(name, str[0]);
-            System.out.println("Кол-во элементов, вес которых больше, чем " + str[0] + ": " + collectionManager.findElemsHeavierPerson(author).size());
+            return str[0];
         } catch (NumberFormatException e) {
             System.out.println("Неверный формат веса");
+            throw e;
         } catch (WrongParam e) {
             System.out.println(e.getMessage());
             String prov = Input.getParams("\tЕсли хотите попробовать ещё раз введите: \"(y)yes\" \n \tИначе введите: \"(n)no\" \n \t");
             if(prov != null && (prov.equals("yes") || prov.equals("y"))) {
-                execute();
+                return execute();
             }
+            throw e;
         }
     }
 }

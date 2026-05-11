@@ -1,21 +1,19 @@
 package client.src.com;
 
+import client.src.builders.LabWork;
+import client.src.builders.LabWorkBuilder;
 import client.src.exceptions.WrongAction;
 import client.src.io.Input;
 import client.src.io.InputFile;
-import server.src.builders.LabWork;
-import server.src.builders.LabWorkBuilder;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComHistory;
+import client.src.manegers.ComHistory;
 
 public class AddCom extends Command {
-    public AddCom(CollectionManager collectionManager) {
-        super(collectionManager);
+    public AddCom() {
         this.name = "add";
         this.description = "Добавить элемент LabWork в коллекцию";
     }
     @Override
-    public void execute(String... args){
+    public LabWork execute(String... args){
         try { 
             LabWorkBuilder labWorkBuilder = new LabWorkBuilder();
             LabWork laba = null;
@@ -34,10 +32,9 @@ public class AddCom extends Command {
                     throw new WrongAction();
                 }
             }
-            if(laba == null) return;
-            collectionManager.addLab(laba);
+            if(laba == null) throw new WrongAction();
             ComHistory.addCom(name, laba.toString());
-
+            return laba;
             //java.util.Date date, String name, Coordinates coordinates, int minimalPoint, int personalQualitiesMinimum,
             //String description, Difficulty difficulty, Person author
             //date, name, coordinatesX, coordinatesY, minimalPoint, personalQualitiesMinimum, description, difficulty, Person(name, height, weight, passportID, hairColor
@@ -47,8 +44,10 @@ public class AddCom extends Command {
         //} 
         catch (WrongAction e) {
             System.out.println("Создание элемента было остановлено и он не был добавлен в коллекцию");
+            throw e;
         } catch (Exception e) {
             System.out.println("Произошла непредвиденная ошибка. Создание элемента было остановлено и он не был добавлен в коллекцию");
+            throw e;
         }
     }
 }

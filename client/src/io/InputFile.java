@@ -10,8 +10,7 @@ import java.util.HashSet;
 import java.util.Scanner;
 
 import client.src.exceptions.WrongParam;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComParser;
+import client.src.manegers.ComParser;
 
 public class InputFile {
     private static ComParser comParser;
@@ -22,12 +21,12 @@ public class InputFile {
     private static String[] col;
     private static String[] command;
 
-    public static void start(File myFile, CollectionManager collectionManager) throws FileNotFoundException {
+    public static void start(File myFile) throws FileNotFoundException {
         readFile = true;
         try (InputStreamReader file = new InputStreamReader(new FileInputStream(myFile))) {
             if(openFile.contains(myFile)) throw new WrongParam("рекурсивный вызов недоступен");
             else openFile.add(myFile);
-            comParser = new ComParser(collectionManager);
+            comParser = new ComParser();
             int c = file.read();
             while (c != '\n' && c != -1) {
                 str += (char) c;

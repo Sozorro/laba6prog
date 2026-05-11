@@ -1,31 +1,34 @@
 package client.src.com;
 
 import client.src.exceptions.WrongParam;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComHistory;
-import server.src.managers.ComParser;
+import client.src.manegers.ComHistory;
+import client.src.manegers.ComParser;
 
 public class HelpCom extends Command {
-    public HelpCom(CollectionManager collectionManager) {
-        super(collectionManager);
+    public HelpCom() {
         this.name = "help";
         this.description = "Вывести справку по доступным командам";
     }
     @Override
-    public void execute(String... args) {
+    public String execute(String... args) {
         try{
             if(args != null && args.length != 0) {
                 throw new WrongParam("Введены лишние параметры");
             }
-            ComParser pars = new ComParser(collectionManager);
-            ComHistory.addCom(name, null);
+            ComParser pars = new ComParser();
             System.out.println("Список доступных команд: ");
             for(Command com : pars.getCommands().values()) {
                 System.out.printf("%s: %s %n", com.getName(), com.getDescription());
             }
+            ComHistory.addCom(name, null);
+            return null;
         }  catch (WrongParam e) {
             System.out.println("Ошибка ввода.");
+            throw e;
         }
-        
+    }
+    @Override
+    public String toString() {
+        return "command 'help'";
     }
 }

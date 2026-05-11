@@ -1,24 +1,21 @@
 package client.src.com;
 
+import client.src.builders.LabWork;
+import client.src.builders.LabWorkBuilder;
 import client.src.exceptions.WrongAction;
 import client.src.exceptions.WrongParam;
 import client.src.io.Input;
 import client.src.io.InputFile;
-import server.src.builders.LabWork;
-import server.src.builders.LabWorkBuilder;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComHistory;
+import client.src.manegers.ComHistory;
 
 public class UpdateCom extends Command {
-    public UpdateCom(CollectionManager collectionManager) {
-        super(collectionManager);
+    public UpdateCom() {
         this.name = "update";
         this.description = "обновить значение элемента коллекции, id которого равен заданному";
     }
     @Override
-    public void execute(String... args) {
+    public LabWork execute(String... args) {
         try {
-            
             LabWorkBuilder labWorkBuilder = new LabWorkBuilder();
             LabWork laba = null;
             if (args.length == 14) laba = labWorkBuilder.makeLabWork(args[1], args[2], args[3], args[4], args[5], args[6], args[7], args[8], args[9], args[10], args[11], args[12], args[13]);
@@ -36,7 +33,7 @@ public class UpdateCom extends Command {
                     throw new WrongAction();
                 }
             }
-            if(laba == null) return;
+            if(laba == null) throw new WrongAction();
 
             String[] str;
             if(args == null || args.length == 0 || (InputFile.readFile == false && args.length != 0)) {
@@ -45,16 +42,17 @@ public class UpdateCom extends Command {
             }
             else str = args;
             
-
-            collectionManager.updateLab(Long.parseLong(str[0]), laba);
-            ComHistory.addCom(name, "Id обновлённого элемента: " + str[0] + "\nНовый элемент: \n" + laba.getTabString(1));
-            
+            ComHistory.addCom(name, laba.toString());
+            return laba;
         } catch (NumberFormatException e) {
             System.out.println("Неверный формат id");
+            throw new WrongParam("Неверный формат id");
         } catch (WrongParam e) {
             System.out.println("Из-за ошибки ввода элемент не был обновлён");
+            throw e;
         } catch (WrongAction e) {
             System.out.println("Создание было остановлено и элемент не был обновлён");
+            throw e;
         }
     }
 }

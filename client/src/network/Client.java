@@ -1,13 +1,12 @@
 package client.src.network;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
+
+import client.src.io.Input;
 
 public class Client {
     //private String host;
@@ -54,14 +53,14 @@ public class Client {
     }
 
     public void request() {
-        try(
-            Scanner scanner = new Scanner(System.in);
-        ) {
-            String line;
-            System.out.println("Введите сообщение для отправки (или 'exit' для выхода или 'discon' для отключения от сервера):");
+        try(Scanner scanner = new Scanner(System.in)) {
             while (true) {
-                line = scanner.nextLine();
-                byte[] serializedObject = Serialize.serializeObject(line);
+                Request req = Input.start(scanner);
+                if (req.getCommand().toString().equals("command 'help'")) {
+                   continue;
+                }
+                //line = scanner.nextLine();
+                byte[] serializedObject = Serialize.serializeObject(req);
                 ByteBuffer buffer = ByteBuffer.allocate(4 + serializedObject.length);
                 buffer.putInt(serializedObject.length);
                 buffer.put(serializedObject);
@@ -69,8 +68,8 @@ public class Client {
                 while (buffer.hasRemaining()) {
                     socketChannel.write(buffer);
                 }
-                if(line != null && (line.toString().equals("discon") ||  line.toString().equals("exit"))) {
-                    break;
+                if (req.getCommand().toString().equals("command 'exit'") || req.getCommand().toString().equals("command 'stop'")) {
+                   break;
                 }
 
                 /*Object response = in.readObject();

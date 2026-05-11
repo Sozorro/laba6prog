@@ -1,17 +1,15 @@
 package client.src.com;
 
 import client.src.exceptions.WrongParam;
-import server.src.managers.CollectionManager;
-import server.src.managers.ComHistory;
+import client.src.manegers.ComHistory;
 
 public class HistoryCom extends Command {
-    public HistoryCom(CollectionManager collectionManager) {
-        super(collectionManager);
+    public HistoryCom() {
         this.name = "history";
         this.description = "Вывести 7 последних команд";
     }
     @Override
-    public void execute(String... args) {
+    public String execute(String... args) {
         if(args != null && args.length != 0) {
             throw new WrongParam("Введены лишние параметры");
         }
@@ -23,5 +21,6 @@ public class HistoryCom extends Command {
             }
         }
         ComHistory.addCom(name, null);
+        return null;
     }
 }

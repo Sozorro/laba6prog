@@ -1,14 +1,10 @@
 package client.src.com;
 
-import server.src.managers.CollectionManager;
-
 public abstract class Command {
     public String name;
     public String description;
-    protected CollectionManager collectionManager;
 
-    Command(CollectionManager collectionManager) {
-        this.collectionManager = collectionManager;
+    Command() {
     }
 
     public String getName() {
@@ -18,7 +14,7 @@ public abstract class Command {
         return description;
     }
 
-    public abstract void execute(String... args);
+    public abstract Object execute(String... args);
 }
 /*
 Нужные команды:
