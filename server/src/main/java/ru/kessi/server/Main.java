@@ -12,11 +12,15 @@ import ru.kessi.server.network.Server;
 public class Main {
     public static Scanner scannerNow;
     public static void main(String[] args) {
+        Logger.info("Запуск програмы создания сервера");
+
+        /*Logger.info("Приложение запущено, env={}", System.getProperty("env"));
+
         Logger.trace("Трассировка");
         Logger.debug("Отладка");
         Logger.info("Запуск приложения");
         Logger.warn("Внимание: {} параметр");
-        Logger.error("Критическая ошибка");
+        Logger.error("Критическая ошибка");*/
 
         scannerNow = new Scanner(System.in);
         while (true) {
