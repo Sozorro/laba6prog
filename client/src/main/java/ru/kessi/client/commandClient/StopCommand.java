@@ -10,7 +10,7 @@ public class StopCommand extends ru.kessi.common.commandManager.command.StopComm
     }
     @Override
     public String toString() {
-        return "command 'stop'";
+        return "stop";
     }
     //scan.close();?
 }

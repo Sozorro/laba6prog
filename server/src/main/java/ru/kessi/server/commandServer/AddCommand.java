@@ -12,6 +12,7 @@ public class AddCommand extends ru.kessi.common.commandManager.command.AddComman
                 return collectionManager.addLab((LabWork) args);
             } else throw new WrongParam("Ошибка в элементе коллекции такой объект невозможно добавить");
         } catch (Exception e) {
+            System.out.println(e);
             System.out.println("Произошла непредвиденная ошибка. Создание элемента было остановлено и он не был добавлен в коллекцию");
             throw e;
         }

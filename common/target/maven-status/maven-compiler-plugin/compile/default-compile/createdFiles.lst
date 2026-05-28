@@ -11,6 +11,7 @@ ru/kessi/common/entites/enums/Color.class
 ru/kessi/common/entites/Person.class
 ru/kessi/common/commandManager/command/ExecuteScriptCommand.class
 ru/kessi/common/network/Serialize.class
+ru/kessi/common/commandManager/command/SaveCommand.class
 ru/kessi/common/commandManager/Command.class
 ru/kessi/common/commandManager/command/AddCommand.class
 ru/kessi/common/commandManager/command/StopCommand.class

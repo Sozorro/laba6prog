@@ -5,6 +5,7 @@
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/AddCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/ClearCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/CountGreaterThanAuthorCommand.java
+/Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/ExecuteScriptCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/ExitCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/FilterStartsWithDescriptionCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/server/src/main/java/ru/kessi/server/commandServer/InfoCommand.java

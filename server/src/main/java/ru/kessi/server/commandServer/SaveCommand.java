@@ -1,32 +1,20 @@
 package ru.kessi.server.commandServer;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.TreeSet;
 
-public abstract class SaveCommand {// extends ru.kessi.common.commandManager.command.SaveCommand implements ServerCommand {
-    /*public SaveCom() {
-        this.name = "save";
-        this.description = "сохранить коллекцию в файл";
-    }
+import ru.kessi.common.entites.LabWork;
+import ru.kessi.common.exceptions.WrongParam;
+import ru.kessi.server.managers.CollectionManager;
+
+public class SaveCommand extends ru.kessi.common.commandManager.command.SaveCommand implements ServerCommand {
     @Override
-    public void execute(CollectionManager collectionManager, Object args) {
+    public String execute(CollectionManager collectionManager, Object args){
         try {
-            String str = "";
-            if(args == null || args.length == 0) str = Input.getParams("В файл вы хотите записать коллекцию?");
-            else if(args.length != 1) throw new WrongParam("Неверное имя файла, проверьте корректность ввода и отсутствие пробелов в названии");
-            else str = args[0];
-            String[] rash = str.split("\\/")[str.split("\\/").length - 1].split("\\.");
-            if(rash.length > 2 || rash.length == 0) {
-                System.out.println("Не получается определить расширение файла, проверьте его правильность и отсутствие лишних точек в названии");                
-            } else if(rash.length == 1) {
-                System.out.println("Расширение не указано");
-                System.out.println("Создание файла " + str + ".csv");
-                str = str + ".csv";
-            } else {
-                System.out.println("Расширение файла - " + rash[1]);
-                if(!rash[1].equals("csv")) {
-                    str = str.replace(rash[1], "csv");
-                    System.out.println("Создание файла " + str);
-                } 
-            }
+            String str = "dop_doc/collection.csv";
             
             try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(str), "UTF-8")) {
                 TreeSet<LabWork> collection = collectionManager.getElems();
@@ -60,14 +48,11 @@ public abstract class SaveCommand {// extends ru.kessi.common.commandManager.com
             } catch (IOException e) {
                 throw new WrongParam("Ошибка ввода");
             }
-            ComHistory.addCom(name, str);
-        } catch (WrongParam e) {
-            System.out.println(e.getMessage());
-            String prov = Input.getParams("\tЕсли хотите попробовать ещё раз введите: \"(y)yes\" \n \tИначе введите: \"(n)no\" \n \t");
-            if(prov != null && (prov.equals("yes") || prov.equals("y"))) {
-                execute();
-            }
+            return ("Коллекция сохранена в файл");
+        } catch (Exception e) {
+            System.out.println("Произошла непредвиденная ошибка. Создание элемента было остановлено и он не был добавлен в коллекцию");
+            throw e;
         }
-
-    }*/
+    
+    }
 }

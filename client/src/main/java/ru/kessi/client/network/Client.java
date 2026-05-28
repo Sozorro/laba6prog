@@ -53,7 +53,7 @@ public class Client {
         Scanner scanner = new Scanner(System.in);
         try {
             Logger.info("Ожидаем подключения сервера ...");
-            if (!connectRetry()) {
+            if (connectRetry()) {
                 Logger.info("Сервер {} подключен", socketChannel.getRemoteAddress());
                 while (true) {
                     try {
@@ -144,11 +144,11 @@ public class Client {
                 while (buffer.hasRemaining()) {
                     socketChannel.write(buffer);
                 } 
+                buffer.clear();
                 if (req.getCommand().getName().equals("exit") || 
                     req.getCommand().getName().equals("stop")) {
                    break;
                 }
-                buffer.clear();
                 answerServer();
             }
 

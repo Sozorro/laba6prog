@@ -13,6 +13,7 @@
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/HistoryCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/InfoCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/RemoveByIdCommand.java
+/Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/SaveCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/ShowCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/StopCommand.java
 /Users/kessi.kissa/Desktop/jlab/lab6/common/src/main/java/ru/kessi/common/commandManager/command/UpdateCommand.java

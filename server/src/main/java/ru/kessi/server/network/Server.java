@@ -18,6 +18,8 @@ import org.tinylog.Logger;
 import org.tinylog.ThreadContext;
 
 import ru.kessi.common.Request;
+import ru.kessi.server.commandServer.SaveCommand;
+import ru.kessi.server.commandServer.ExecuteScriptCommand;
 import ru.kessi.server.managers.CollectionManager;
 import ru.kessi.server.managers.ComParser;
 
@@ -50,6 +52,8 @@ public class Server {
         Logger.info("Сервер host={} port={} запущен", host, port);
     }
     public void stop() {
+        SaveCommand saveCommand = new SaveCommand();
+        saveCommand.execute(collectionManager, null);
         work = false;
         if (dotsThread != null) {
             dotsThread.interrupt();
@@ -69,7 +73,10 @@ public class Server {
             selector = Selector.open();
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
             collectionManager = new CollectionManager();
-            Logger.info("Сервер host={} port={} создать и ожидает подключения", host, port);
+            ExecuteScriptCommand executeScriptCommand = new ExecuteScriptCommand();
+            executeScriptCommand.execute(collectionManager, null);
+
+            Logger.info("Сервер host={} port={} создн и ожидает подключения", host, port);
         } catch (Exception e) {
             Logger.error("Ошибка при попытке создать сервер", e);
             stop();
@@ -201,6 +208,7 @@ public class Server {
             //buf.clear();
             //arrByte.write(bytes);
             Request req = Serialize.tryDeserialize(bytes);
+            //Logger.debug("запрос: {} ---- {}", req, req.getCommand().getName());
             
             if (req == null) {
                 Logger.debug("Получен null-запрос");
@@ -208,12 +216,14 @@ public class Server {
                 return;
             }
             Logger.debug("Получен объект: {}", req);
-            if (req.getCommand().toString().equals("exit")) {
+            if (req.getCommand().getName().equals("exit")) {
                 Logger.info("Клиент запросил разрыв соединения (команда 'exit')");
-                clientChannel.close();
-                throw new EOFException("Канал закрыт по команде клиента");
+                work = false;
+                return;
+                //clientChannel.close();
+                //throw new EOFException("Канал закрыт по команде клиента");
             }
-            if (req.getCommand().toString().equals("stop")) {
+            if (req.getCommand().getName().equals("stop")) {
                 Logger.info("Клиент запросил завершение сервера (команда 'stop')");
                 work = false;
                 return;

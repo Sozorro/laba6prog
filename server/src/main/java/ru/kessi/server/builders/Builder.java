@@ -13,7 +13,7 @@ public class Builder {
                 return action.apply(params);
             } catch (WrongParam e) {
                 System.out.println(e.getMessage());
-                System.out.println("\tВведены не все параметры или они некорректно заданы, хотите ввести их ещё раз в интерактивном режиме? \n" );
+                System.out.println("\tВведены не все параметры или они некорректно заданы \n" );
             }
         }
 

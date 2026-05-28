@@ -10,7 +10,7 @@ public class ExitCommand extends ru.kessi.common.commandManager.command.ExitComm
     }
     @Override
     public String toString() {
-        return "command 'exit'";
+        return "exit";
     }
     //scan.close();?
 }
