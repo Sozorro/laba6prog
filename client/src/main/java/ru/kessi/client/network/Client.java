@@ -9,28 +9,29 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Scanner;
 
+import org.tinylog.Logger;
+
 import ru.kessi.client.io.Input;
 import ru.kessi.common.Request;
 
 public class Client {
-    //private String host;
-    //private int port;
+    private static final int MAX_MESSAGE_SIZE = 10 * 1024 * 1024;
+
     private SocketChannel socketChannel;
     private String host;
     private int port;
 
-    public Client() { //String host, int port) {
-        //this.host = host;
-        //this.port = port;
+    public Client() {
     }
 
     public void createClient(){
         try {
             socketChannel = SocketChannel.open();
-            socketChannel.configureBlocking(false);
-            System.out.println("Клиент создан");
+            socketChannel.configureBlocking(true);
+            socketChannel.socket().setSoTimeout(30000); // чтобы не висеть вечно
+            Logger.debug("Клиент создан");
         } catch (Exception e) {
-            System.out.println("Ошибка при попытке создать клиента");
+            Logger.error(e, "Ошибка при попытке создать клиента");
         }
     }
 
@@ -38,25 +39,37 @@ public class Client {
         try {
             if (socketChannel != null && socketChannel.isOpen()) {
                 socketChannel.close();
+                Logger.info("Клиент удалён");
             }
-            System.out.println("Клиент удалён");
         } catch (Exception e) {
-            System.out.println("Ошибка при попытке удалить клиента");
+            Logger.error("Ошибка при попытке удалить клиента", e);
         }
     }
 
     public void run(String host, int port) {
         this.host = host;
         this.port = port;
+
+        Scanner scanner = new Scanner(System.in);
         try {
-            createClient();
-            System.out.println("Ожидаем подключения сервера ...");
-            if (connectRetry()) {
-                System.out.println("Сервер " + socketChannel.getRemoteAddress() + " подключен");
-                request();
+            Logger.info("Ожидаем подключения сервера ...");
+            if (!connectRetry()) {
+                Logger.info("Сервер {} подключен", socketChannel.getRemoteAddress());
+                while (true) {
+                    try {
+                        request(scanner); // Один вызов — внутри цикл обработки команд
+                        break; // Выход, если request() завершился нормально (например, exit)
+                    } catch (IOException e) {
+                        Logger.warn("Соединение потеряно, переподключение...", e);
+                        if (!connectRetry()) {
+                            Logger.error("Не удалось переподключиться. Завершение работы.");
+                            break;
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
-            System.out.println("Ошибка при попытке подключить сервер");
+            Logger.error(e, "Ошибка при попытке подключить сервер");
         } finally {
             closeClient();
         }
@@ -66,73 +79,63 @@ public class Client {
         int maxAttempt = 100;
         int attempt = 0;
                 
-        System.out.println("Попытка установить связь с сервером...");
-
-        if (socketChannel != null && socketChannel.isOpen()) {
-            //try {
-                //socketChannel.close();
-                //socketChannel = SocketChannel.open();
-                closeClient();
-                createClient();
-            //} catch (IOException e) {
-            //    System.out.println("Ошибка при попытке переподключить сервер");
-            //}
-            
-
-        }
+        Logger.info("Попытка установить связь с сервером...");
 
         while (attempt < maxAttempt) {
             attempt++;
+            
+            if (socketChannel != null && socketChannel.isOpen()) {
+                closeClient();
+            }
+            createClient();
+
             try {
                 if (socketChannel.connect(new InetSocketAddress(host, port))) {
+                    Logger.debug("Подключение установлено с попытки {}", attempt);
                     return true;
-                } else {
-                    // Неблокирующее подключение не завершено сразу
-                    System.out.println("Попытка " + attempt + ": подключение ещё не завершено, ждём...");
-                    Thread.sleep(1000); // Ждём 1 секунду перед проверкой
-                    if (socketChannel.finishConnect()) {
-                        return true;
-                    }
                 }
             } catch (ConnectException e) {
-            System.out.println("Попытка " + attempt + " не удалась: сервер недоступен (" + e.getMessage() + ")");
-        } catch (NoRouteToHostException e) {
-            System.out.println("Попытка " + attempt + " не удалась: хост недоступен (" + e.getMessage() + ")");
-        } catch (IOException e) {
-            System.out.println("Попытка " + attempt + " не удалась: " + e.getMessage());
-        } catch (Exception e) {
-            System.out.println("Попытка " + attempt + " не удалась (неизвестная ошибка): " + e.getMessage());
-        }
+                Logger.warn("Попытка {} не удалась: сервер недоступен ({}:{})", attempt, host, port);
+            } catch (NoRouteToHostException e) {
+                Logger.warn("Попытка {} не удалась: хост недоступен", attempt);
+            } catch (IOException e) {
+                Logger.warn("Попытка {} не удалась: {}", attempt, e.getMessage());
+            } catch (Exception e) {
+                Logger.warn("Попытка {} не удалась (неизвестная ошибка): {}", attempt, e.getMessage());
+            }
 
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
-                e.getStackTrace();
+                Thread.currentThread().interrupt();
+                Logger.error("Поток прерван");
                 break;
             }
         }
 
-        System.out.println("Достигнут лимит попыток подключения. Проверьте доступность сервера.");
+        Logger.error("Достигнут лимит попыток подключения. Проверьте доступность сервера.");
         return false;
     }
 
 
-    public void request() {
-        try(Scanner scanner = new Scanner(System.in)) {
+    public void request(Scanner scanner) throws IOException {
+        try {
             while (true) {
                 Request req = Input.start(scanner);
-                if (req.getCommand() != null) {
-                    System.out.println("##################");
-                    System.out.println("Передаём данные:");
-                    System.out.println(req.getCommand().toString());
-                    if(req.getLabWork() != null) System.out.println(req.getLabWork().toString());
-                    if(req.getArgs() != null) System.out.println(req.getArgs().toString());
-                    System.out.println("##################");
+                if (req == null || req.getCommand() == null) {
+                    continue;
                 }
+
+                Logger.debug("получена команда: {}", req.getCommand().toString());
+
                 if (req.getCommand().getName().equals("help")) {
-                   continue;
+                    continue;
                 }
-                //line = scanner.nextLine();
+
+                Logger.debug("Передаём данные: {}", req.getCommand().toString());
+                if(req.getLabWork() != null) Logger.trace("LabWork: {}", req.getLabWork());
+                if(req.getArgs() != null) Logger.trace("Args: {}", req.getArgs());
+                
                 byte[] serializedObject = Serialize.serializeObject(req);
                 ByteBuffer buffer = ByteBuffer.allocate(4 + serializedObject.length);
                 buffer.putInt(serializedObject.length);
@@ -140,26 +143,20 @@ public class Client {
                 buffer.flip();
                 while (buffer.hasRemaining()) {
                     socketChannel.write(buffer);
-                }
-                if (req.getCommand().toString().equals("command 'exit'") || req.getCommand().toString().equals("command 'stop'")) {
+                } 
+                if (req.getCommand().getName().equals("exit") || 
+                    req.getCommand().getName().equals("stop")) {
                    break;
                 }
                 buffer.clear();
                 answerServer();
-
-                /*Object response = in.readObject();
-                System.out.println("Ответ сервера: " + response);*/
             }
 
         } catch (IOException e) {
-            if (connectRetry()) {
-                request();
-            }
-            e.printStackTrace();
-            System.out.println("Ошибка при попытке передать запрос");
+            Logger.error("Ошибка ввода-вывода при попытке передать запрос", e);
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Ошибка при попытке передать запрос");
+            Logger.error("Ошибка при попытке передать запрос", e);
         }
     }
     public void answerServer() {
@@ -168,19 +165,15 @@ public class Client {
             while (lengthBuffer.hasRemaining()) {
                 int c = socketChannel.read(lengthBuffer);
                 if (c == -1) {
-                    System.out.println("нет ответа:(");
-                    return;
-                } else if (c == 0) {
-                    // Нет данных, ждём следующего события
-                    System.out.println("Нет данных, ждём следующего события");
-                    return;
+                    Logger.warn("Ошибка при попытке чтения заголовка ответа от сервера :(");
+                    throw new IOException("Сервер закрыл соединение");
                 }   
             }
             lengthBuffer.flip();
             int size = lengthBuffer.getInt();
 
-            if(size <= 0) {
-                System.out.println("Неверный размер");
+            if(size <= 0 || size > MAX_MESSAGE_SIZE) {
+                Logger.warn("Неверный размер: {}", size);
                 return;
             }
 
@@ -189,8 +182,8 @@ public class Client {
             while (buf.hasRemaining()) {
                 int c = socketChannel.read(buf);
                 if (c == -1) {
-                    System.out.println("не работает?:(");
-                    return;
+                    Logger.warn("Ошибка при попытке чтения тела ответа от сервера :(");
+                    throw new IOException("Сервер закрыл соединение");
                 }
             }
             buf.flip();
@@ -200,11 +193,9 @@ public class Client {
             if (req == null) {
                 return;
             }
-            if (req != null) {
-                System.out.println("Получен объект: " + req);
-            } 
+            Logger.info("Получен объект: {}", req);
         } catch (Exception e) {
-            // TODO: handle exception
+            Logger.error(e, "Ошибка при чтении ответа сервера");
         }
         
 
@@ -283,9 +274,4 @@ if (obj != null) {
  * Недопустим обмен "простыми" строками. Так, для команды add или её аналога
  * необходимо сформировать объект, содержащий тип команды и объект, который
  * должен храниться в вашей коллекции.
- * Дополнительное задание:
- * Реализовать логирование различных этапов работы сервера (начало работы,
- * получение нового подключения, получение нового запроса, отправка ответа и
- * т.п.) с помощью Logback
  */
-

@@ -3,6 +3,8 @@ package ru.kessi.client.io;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import org.tinylog.Logger;
+
 import ru.kessi.client.manegers.ComParser;
 import ru.kessi.common.Request;
 import ru.kessi.common.exceptions.WrongParam;
@@ -31,26 +33,28 @@ public class Input {
                 else {
                     return comParser.interpret(command[0], command[1]);
                 }
-            } catch (NoSuchElementException e) { //if end file(ctrl+D)
-                scannerNow = new Scanner(System.in);
-            } catch (Exception e) {//WrongParam | WrongAction e) { //if end file(ctrl+D)
+            } catch (NoSuchElementException e) {
+                // 👈 EOF — корректно сигнализируем об окончании ввода
+                Logger.info("Ввод завершён (EOF). Возврат управления.");
+                return null;
+                
+            } catch (WrongParam e) {
                 System.out.println(e.getMessage());
-                scannerNow = new Scanner(System.in);
+                // Продолжаем цикл ввода
+                
+            } catch (Exception e) {
+                Logger.error(e, "Неожиданная ошибка при вводе");
+                System.out.println("Произошла ошибка. Попробуйте ещё раз.");
             }
         }
     }
     private static String readNextLine() throws WrongParam { 
-        try {
-            String s = scannerNow.nextLine().trim();
-            while (s.equals("") || s == null) {
-                System.out.println("Ожидание строки");
-                s = scannerNow.nextLine().trim();
-            }
-            return s;
-        } catch (NoSuchElementException e) { //if end file(ctrl+D)
-            throw new WrongParam("Недопустимые символы для ввода");
+        String s = scannerNow.nextLine().trim();
+        while (s.equals("") || s == null) {
+            System.out.println("Ожидание строки");
+            s = scannerNow.nextLine().trim();
         }
-        
+        return s;
     }
 
     public static String getParams(String s, String... args) throws WrongParam { 

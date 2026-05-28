@@ -1,12 +1,15 @@
 package ru.kessi.client;
 
 import java.util.Scanner;
+import org.tinylog.Logger;
 
 import ru.kessi.client.network.Client;
 
 public class Main {
     public static Scanner scannerNow;
     public static void main(String[] args) {
+        Logger.info("Запуск создания клиента");
+
         scannerNow = new Scanner(System.in);
         while (true) {
             try {
