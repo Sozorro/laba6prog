@@ -153,10 +153,10 @@ public class Client {
             }
 
         } catch (IOException e) {
-            Logger.error("Ошибка ввода-вывода при попытке передать запрос", e);
+            Logger.error("Ошибка ввода-вывода при попытке передать запрос");
             throw e;
         } catch (Exception e) {
-            Logger.error("Ошибка при попытке передать запрос", e);
+            Logger.error("Ошибка при попытке передать запрос");
         }
     }
     public void answerServer() {
@@ -195,7 +195,7 @@ public class Client {
             }
             Logger.info("Получен объект: {}", req);
         } catch (Exception e) {
-            Logger.error(e, "Ошибка при чтении ответа сервера");
+            Logger.error("Ошибка при чтении ответа сервера");
         }
         
 

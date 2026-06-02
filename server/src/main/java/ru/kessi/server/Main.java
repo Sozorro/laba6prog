@@ -1,10 +1,11 @@
 package ru.kessi.server;
 
 
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import org.tinylog.Logger;
 
+import org.tinylog.Logger;
 
 import ru.kessi.common.exceptions.WrongParam;
 import ru.kessi.server.network.Server;
@@ -59,5 +60,6 @@ public class Main {
         }
         
     }
+        ArrayList<String> arr = new ArrayList<>();
 
 }
